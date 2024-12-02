@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Ottieni la lista dei file che sono stati aggiunti all'area di staging
+staged_files=$(git diff --cached --name-only)
+
+# Trova tra i file staged quelli che sono più grandi di 80MB
+large_files=""
+for file in $staged_files; do
+    if [ -f "$file" ]; then
+        # Compatibilità macOS: usa stat -f%z per ottenere la dimensione del file
+        size=$(stat -f%z "$file")
+        if [ "$size" -gt $((80 * 1024 * 1024)) ]; then
+            large_files="$large_files $file"
+        fi
+    fi
+done
+
+for file in $large_files; do
+    # Rimuovi il prefisso "./" dal percorso
+    relative_path=${file#./}
+
+    # Controlla se il file è già ignorato
+    if ! grep -Fxq "$relative_path" .gitignore; then
+        # Aggiungi il file a .gitignore
+        echo "$relative_path" >> .gitignore
+        echo "Added $relative_path to .gitignore"
+        git add .gitignore
+    fi
+
+    # Crea il file segnaposto
+    placeholder_file="${file}.info"
+    size_human=$(du -h "$file" | cut -f1)
+    modified_date=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$file")
+    full_path=$(realpath "$file")
+    hostname=$(hostname)  # Ottieni il nome della macchina
+
+    {
+        echo "Created on machine: $hostname"
+        echo "Full path: $full_path"
+        echo "Size: $size_human"
+        echo "Last edit: $modified_date"
+    } > "$placeholder_file"
+
+    echo "Bookmark created for $relative_path in $placeholder_file"
+
+    # Rimuovi il file pesante dall'indice di Git (non dal filesystem)
+    git rm --cached "$relative_path" 2>/dev/null
+
+    # Aggiungi il file segnaposto all'indice di Git
+    git add "$placeholder_file"
+done
+

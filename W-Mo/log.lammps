@@ -1,0 +1,188 @@
+LAMMPS (2 Aug 2023)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+######################################
+# LAMMPS INPUT SCRIPT
+# Find minimum energy bcc (body-centered cubic) atomic configuration
+# Modified for W supercell
+
+######################################
+# INITIALIZATION
+clear
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+units metal
+dimension 3
+boundary p p p # Periodic boundary conditions in all directions
+atom_style atomic # bond, angles, dihedral not needed
+atom_modify map array # Check it!
+
+######################################
+# ATOM DEFINITION
+lattice bcc 3.165 # Lattice parameter for W [Å]
+Lattice spacing in x,y,z = 3.165 3.165 3.165
+region box block 0 1 0 1 0 1 units lattice # Define the simulation box (command "region" defines a geometric region of space)
+create_box 2 box # Create the simulation box (1 is the numeber of atom type)
+Created orthogonal box = (0 0 0) to (3.165 3.165 3.165)
+  2 by 4 by 4 MPI processor grid
+create_atoms 1 box # Create atoms inside the box (1 is the numeber of atom type)
+Created 2 atoms
+  using lattice units in orthogonal box = (0 0 0) to (3.165 3.165 3.165)
+  create_atoms CPU = 0.001 seconds
+replicate 10 10 25 # Replicate to create a 10x10x25 supercell
+Replication is creating a 10x10x25 = 2500 times larger system...
+  orthogonal box = (0 0 0) to (31.65 31.65 79.125)
+  2 by 2 by 8 MPI processor grid
+  5000 atoms
+  replicate CPU = 0.003 seconds
+
+set type 1 type/fraction 2 0.5 10
+Setting atom values ...
+  2496 settings made for type/fraction
+
+labelmap atom 1 W
+labelmap atom 2 Mo
+mass W 183.84
+mass Mo 95.95
+
+######################################
+# DEFINE INTERATOMIC POTENTIAL
+pair_style eam/fs # Use the EAM/fs potential style
+pair_coeff * * W-Mo.eam.alloy W Mo # Use the EAM potential file for W
+neighbor 2.0 bin # Set the neighbor list by binning ("For unsolvated small molecules in a non-periodic box, the nsq choice can sometimes be faster" wrt bin)
+neigh_modify delay 0 every 1 check yes # Update neighbor list every timestep ("every 1") if any atom moves ("check yes") more than half the neighbor skin distance. (every 1 too high maybe)
+# Check "2.0 bin" and "every 1"! (simulation NVE to check)
+
+write_data initial_W-Mo.data nocoeff # Write initial atomic configuration to file. ("nocoeff" doesn't write ff parameters)
+System init for write_data ...
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7.3
+  ghost atom cutoff = 7.3
+  binsize = 3.65, bins = 9 9 22
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair eam/fs, perpetual
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d
+      bin: standard
+
+######################################
+# DEFINE COMPUTES
+compute eng all pe/atom # Compute potential energy per atom
+compute eatoms all reduce sum c_eng # Compute total potential energy
+
+#####################################################
+# ENERGY MINIMIZATION
+reset_timestep 0 # Reset the timestep counter
+fix 1 all box/relax iso 0.0 vmax 0.001 # Apply isotropic box relaxation with a maximum velocity
+thermo 10 # Print thermo output every 10 steps
+thermo_style custom step pe lx ly lz press c_eatoms # Custom thermo output style (pe if atom_types=1)
+min_style cg # Use conjugate gradient minimization
+minimize 1e-25 1e-25 5000 10000 # Minimization settings: tolerance and iteration limits
+WARNING: Energy due to 1 extra global DOFs will be included in minimizer energies
+ (src/min.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 4.638 | 4.642 | 4.647 Mbytes
+   Step         PotEng           Lx             Ly             Lz           Press         c_eatoms   
+         0  -39320.177      31.65          31.65          79.125        -26574.81      -39320.177    
+        10  -39329.04       31.557212      31.557212      78.89303       0.3577086     -39329.04     
+        20  -39329.119      31.557933      31.557933      78.894833     -65.96865      -39329.119    
+        30  -39329.126      31.557766      31.557766      78.894414     -0.21073447    -39329.126    
+        40  -39329.127      31.557748      31.557748      78.89437       0.047536171   -39329.127    
+        50  -39329.127      31.557884      31.557884      78.894709     -39.855299     -39329.127    
+        60  -39329.128      31.557746      31.557746      78.894365     -0.23629332    -39329.128    
+        70  -39329.128      31.557745      31.557745      78.894362      0.011633635   -39329.128    
+        80  -39329.128      31.557866      31.557866      78.894665     -34.818327     -39329.128    
+        90  -39329.128      31.557745      31.557745      78.894363     -0.090785522   -39329.128    
+       100  -39329.128      31.557745      31.557745      78.894362      0.015817067   -39329.128    
+       110  -39329.128      31.557833      31.557833      78.894582     -25.280455     -39329.128    
+       120  -39329.128      31.557745      31.557745      78.894363     -0.10645785    -39329.128    
+       130  -39329.128      31.557745      31.557745      78.894362      0.015655224   -39329.128    
+       140  -39329.128      31.557813      31.557813      78.894534     -19.710723     -39329.128    
+       150  -39329.128      31.557745      31.557745      78.894364     -0.10223229    -39329.128    
+       160  -39329.128      31.557745      31.557745      78.894362      0.014220042   -39329.128    
+       170  -39329.128      31.557801      31.557801      78.894502     -16.083914     -39329.128    
+       180  -39329.128      31.557745      31.557745      78.894364     -0.094756305   -39329.128    
+       190  -39329.128      31.557745      31.557745      78.894362      0.012580048   -39329.128    
+       200  -39329.129      31.557792      31.557792      78.894479     -13.422974     -39329.129    
+       210  -39329.129      31.557745      31.557745      78.894364     -0.086678829   -39329.129    
+       220  -39329.129      31.557745      31.557745      78.894363      0.010981587   -39329.129    
+       230  -39329.129      31.557785      31.557785      78.894461     -11.370976     -39329.129    
+       240  -39329.129      31.557745      31.557745      78.894363     -0.078732339   -39329.129    
+       250  -39329.129      31.557745      31.557745      78.894363      0.0095035539  -39329.129    
+       260  -39329.129      31.557779      31.557779      78.894447     -9.7500112     -39329.129    
+       270  -39329.129      31.557745      31.557745      78.894363     -0.071232934   -39329.129    
+       280  -39329.129      31.557745      31.557745      78.894363      0.0081741323  -39329.129    
+       290  -39329.129      31.557774      31.557774      78.894436     -8.4530247     -39329.129    
+       300  -39329.129      31.557745      31.557745      78.894363     -0.064322428   -39329.129    
+       310  -39329.129      31.557745      31.557745      78.894363      0.0069994967  -39329.129    
+       320  -39329.129      31.557771      31.557771      78.894427     -7.4081329     -39329.129    
+       330  -39329.129      31.557745      31.557745      78.894363     -0.058068256   -39329.129    
+       340  -39329.129      31.557745      31.557745      78.894363      0.0059712299  -39329.129    
+       350  -39329.129      31.557768      31.557768      78.89442      -6.563484      -39329.129    
+       360  -39329.129      31.557745      31.557745      78.894363     -0.052439375   -39329.129    
+       370  -39329.129      31.557745      31.557745      78.894363      0.0050736907  -39329.129    
+       380  -39329.129      31.557766      31.557766      78.894414     -5.8801364     -39329.129    
+       390  -39329.129      31.557745      31.557745      78.894363     -0.047397867   -39329.129    
+       400  -39329.129      31.557745      31.557745      78.894363      0.0042923107  -39329.129    
+       410  -39329.129      31.557764      31.557764      78.894409     -5.3280727     -39329.129    
+       420  -39329.129      31.557745      31.557745      78.894363     -0.042911392   -39329.129    
+       430  -39329.129      31.557745      31.557745      78.894363      0.0036135562  -39329.129    
+       440  -39329.129      31.557762      31.557762      78.894405     -4.8835734     -39329.129    
+       450  -39329.129      31.557745      31.557745      78.894363     -0.038936301   -39329.129    
+       451  -39329.129      31.557745      31.557745      78.894363      0.038976824   -39329.129    
+Loop time of 0.550911 on 32 procs for 451 steps with 5000 atoms
+
+96.1% CPU use with 32 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = energy tolerance
+  Energy initial, next-to-last, final = 
+     -39320.1766476322  -39329.1287163619  -39329.1287163619
+  Force two-norm initial, final = 3944.0588 0.0081705811
+  Force max component initial, final = 3944.0483 0.005750995
+  Final line search alpha, max atom move = 0.17406392 0.0010010407
+  Iterations, force evaluations = 451 899
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.33403    | 0.36072    | 0.41324    |   2.6 | 65.48
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0.076459   | 0.11664    | 0.1328     |   4.5 | 21.17
+Output  | 0.0022722  | 0.0023773  | 0.004919   |   0.9 |  0.43
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.07118    |            |       | 12.92
+
+Nlocal:         156.25 ave         175 max         150 min
+Histogram: 24 0 0 0 0 0 0 0 0 8
+Nghost:         1246.5 ave        1298 max        1173 min
+Histogram: 4 4 4 4 0 0 0 0 0 16
+Neighs:           8750 ave        9800 max        8400 min
+Histogram: 20 0 4 0 0 0 0 4 0 4
+
+Total # of neighbors = 280000
+Ave neighs/atom = 56
+Neighbor list builds = 0
+Dangerous builds = 0
+
+
+variable natoms equal "count(all)" # Total number of atoms
+variable teng equal "c_eatoms" # Total energy
+variable length equal "lx" # Simulation x length (box length in x-direction)
+variable ecoh equal "v_teng/v_natoms" # Cohesive energy
+
+print "Total energy (eV) = ${teng};"
+Total energy (eV) = -39329.128716362;
+print "Number of atoms = ${natoms};"
+Number of atoms = 5000;
+print "Cohesive energy (eV) = ${ecoh};"
+Cohesive energy (eV) = -7.8658257432724;
+
+print "All done!" #
+All done!
+
+write_data system_W-Mo_en_min.data nocoeff # Write the minimized atomic configuration to file
+System init for write_data ...
+Total wall time: 0:00:00

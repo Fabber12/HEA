@@ -1,0 +1,58 @@
+# Thermo output
+	thermo          1000
+	thermo_style    custom step temp press pe ke etotal vol density
+	thermo_modify   flush yes
+
+# Dump configuration
+	dump            d1 all custom 50000 annealed_system.dump id type x y z xu yu zu vx vy vz
+	dump_modify     d1 element W Mo
+
+
+# ----- INITIAL EQUILIBRATION AT Ti -----
+	velocity        all create ${Ti} 872392 dist gaussian
+	fix             feq all npt temp ${Ti} ${Ti} ${tdamp} iso ${press} ${press} ${pdamp}
+	run             200000    # 200 ps
+	unfix           feq
+
+
+# ----- HEATING FROM Ti TO Thigh -----
+	fix             fheat all npt temp ${Ti} ${Thigh} ${tdamp} iso ${press} ${press} ${pdamp}
+	run             1000000   # 1 ns
+	unfix           fheat
+
+
+# ----- HOLD AT Thigh -----
+	fix             fholdhigh all npt temp ${Thigh} ${Thigh} ${tdamp} iso ${press} ${press} ${pdamp}
+	run             1000000   # 1 ns
+	unfix           fholdhigh
+
+
+# ----- COOLING LOOP FROM Thigh DOWN TO Tfinal IN STEPS OF Tstep -----
+	print "Cooling from ${Thigh} K down to ${Tfinal} K in ${nsteps} steps of ${Tstep} K each."
+
+	variable i loop ${nsteps}
+	label loop_cool
+	  variable Tstart equal ${Thigh}-(${i}-1)*${Tstep}
+	  variable Tend   equal ${Thigh}-${i}*${Tstep}
+
+	  if "${Tend} < ${Tfinal}" then "variable Tend equal ${Tfinal}"
+
+	  print "Cooling step ${i}: ${Tstart} K to ${Tend} K"
+
+	  fix  fcool all npt temp ${Tstart} ${Tend} ${tdamp} iso ${press} ${press} ${pdamp}
+	  run  1000000    # 1 ns per cooling segment
+	  unfix fcool
+
+	  next i
+	jump SELF loop_cool
+
+
+# ----- HOLD AT Tfinal -----
+	fix             ffinal all npt temp ${Tfinal} ${Tfinal} ${tdamp} iso ${press} ${press} ${pdamp}
+	run             1000000   # 1 ns
+	unfix           ffinal
+
+
+# ----- FINAL OUTPUT -----
+	write_data      annealed_W-Mo.data
+

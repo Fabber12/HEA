@@ -1,0 +1,64 @@
+######################################
+# LAMMPS INPUT SCRIPT
+# Find minimum energy bcc (body-centered cubic) atomic configuration
+
+######################################
+# INITIALIZATION
+clear 
+units metal 
+dimension 3 
+boundary p p p # Periodic boundary conditions in all directions
+atom_style atomic # bond, angles, dihedral not needed
+atom_modify map array # Check it!
+
+######################################
+# ATOM DEFINITION
+lattice bcc 3.165 # Lattice parameter for W [Å]
+region box block 0 1 0 1 0 1 units lattice # Define the simulation box (command "region" defines a geometric region of space)
+create_box 2 box # Create the simulation box (1 is the numeber of atom type)
+create_atoms 1 box # Create atoms inside the box (1 is the numeber of atom type)
+replicate 10 10 25 # Replicate to create a 10x10x25 supercell
+
+set type 1 type/fraction 2 0.5 10
+
+labelmap atom 1 W
+labelmap atom 2 Mo
+mass W 183.84
+mass Mo 95.95
+
+######################################
+# DEFINE INTERATOMIC POTENTIAL
+pair_style eam/fs # Use the EAM/fs potential style
+pair_coeff * * W-Mo.eam.alloy W Mo # Use the EAM potential file for W
+neighbor 2.0 bin # Set the neighbor list by binning ("For unsolvated small molecules in a non-periodic box, the nsq choice can sometimes be faster" wrt bin)
+neigh_modify delay 0 every 1 check yes # Update neighbor list every timestep ("every 1 timestep") if any atom moves ("check yes") more than half the neighbor skin distance. ("every 1" too high maybe)
+# Check "2.0 bin" and "every 1"! (simulation NVE to check)
+
+write_data initial_W-Mo.data nocoeff # Write initial atomic configuration to file. ("nocoeff" doesn't write ff parameters)
+
+######################################
+# DEFINE COMPUTES
+compute eng all pe/atom # Compute potential energy per atom
+compute eatoms all reduce sum c_eng # Compute total potential energy
+
+#####################################################
+# ENERGY MINIMIZATION
+reset_timestep 0 # Reset the timestep counter
+fix 1 all box/relax iso 0.0 vmax 0.001 # Apply isotropic box relaxation with a maximum velocity 
+thermo 10 # Print thermo output every 10 steps
+thermo_style custom step pe lx ly lz press c_eatoms # Custom thermo output style (pe if atom_types=1)
+min_style cg # Use conjugate gradient minimization
+minimize 1e-25 1e-25 5000 10000 # Minimization settings: tolerance and iteration limits
+
+variable natoms equal "count(all)" # Total number of atoms
+variable teng equal "c_eatoms" # Total energy
+variable length equal "lx" # Simulation x length (box length in x-direction)
+variable ecoh equal "v_teng/v_natoms" # Cohesive energy
+
+print "Total energy (eV) = ${teng};"
+print "Number of atoms = ${natoms};"
+print "Cohesive energy (eV) = ${ecoh};" 
+
+print "All done!" # 
+
+write_data system_W-Mo_en_min.data nocoeff # Write the minimized atomic configuration to file

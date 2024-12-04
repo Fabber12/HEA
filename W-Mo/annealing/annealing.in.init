@@ -1,6 +1,6 @@
 # ----- VARIABLES -----
 	variable Ti     equal 300     # Initial temperature (K)
-	variable Thigh  equal 2300    # High temperature for annealing (K)
+	variable Thigh  equal 3300    # High temperature for annealing (K)
 	variable Tfinal equal 300     # Final temperature after cooling (K)
 	variable Tstep  equal 500     # Cooling step (K) per stage (Thigh - Tstep - Tstep - ...)
 	variable delT   equal ${Thigh}-${Tfinal}

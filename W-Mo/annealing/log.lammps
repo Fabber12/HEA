@@ -6,12 +6,12 @@ OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98
 include "annealing.in.init"
 # ----- VARIABLES -----
 	variable Ti     equal 300     # Initial temperature (K)
-	variable Thigh  equal 2300    # High temperature for annealing (K)
+	variable Thigh  equal 3300    # High temperature for annealing (K)
 	variable Tfinal equal 300     # Final temperature after cooling (K)
 	variable Tstep  equal 500     # Cooling step (K) per stage (Thigh - Tstep - Tstep - ...)
 	variable delT   equal ${Thigh}-${Tfinal}
-	variable delT   equal 2300-${Tfinal}
-	variable delT   equal 2300-300
+	variable delT   equal 3300-${Tfinal}
+	variable delT   equal 3300-300
 	variable nsteps equal ceil(v_delT/v_Tstep) # Number of cooling steps
 
 

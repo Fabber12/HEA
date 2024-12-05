@@ -1,6 +1,8 @@
 # Thermo output
+	compute msd all msd
+
 	thermo          1000
-	thermo_style    custom step temp press pe ke etotal vol density
+	thermo_style    custom step temp press pe ke etotal vol density c_msd[1] c_msd[2] c_msd[3]
 	thermo_modify   flush yes
 
 # Dump configuration

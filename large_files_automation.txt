@@ -4,6 +4,29 @@
 output_dir="large_files"
 mkdir -p "$output_dir"
 
+# Verifica se è il primo commit
+if ! git rev-parse HEAD >/dev/null 2>&1; then
+    echo "First commit: skipping checks for previous commits."
+    exit 0
+fi
+
+# Crea .gitignore se non esiste
+if [ ! -f .gitignore ]; then
+    touch .gitignore
+fi
+
+# Aggiungi 'large_files/' a .gitignore se non è già presente
+if ! grep -Fxq "large_files/" .gitignore; then
+    echo "large_files/" >> .gitignore
+    git add .gitignore
+fi
+
+# Aggiungi '*.swp' a .gitignore per ignorare i file temporanei di editor come Vim
+if ! grep -Fxq "*.swp" .gitignore; then
+    echo "*.swp" >> .gitignore
+    git add .gitignore
+fi
+
 # Ottieni il nome del branch corrente
 branch_name=$(git rev-parse --abbrev-ref HEAD)
 
@@ -14,7 +37,6 @@ staged_files=$(git diff --cached --name-only)
 large_files=""
 for file in $staged_files; do
     if [ -f "$file" ]; then
-        # Compatibilità macOS/Linux: usa stat -f%z (macOS) o stat -c%s (Linux)
         size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file")
         if [ "$size" -gt $((20 * 1024 * 1024)) ]; then
             large_files="$large_files $file"
@@ -26,46 +48,49 @@ for file in $large_files; do
     # Rimuovi il prefisso "./" dal percorso
     relative_path=${file#./}
 
-    # Controlla se il file è già ignorato
-    if ! grep -Fxq "$relative_path" .gitignore; then
-        # Aggiungi il file a .gitignore
-        echo "$relative_path" >> .gitignore
-        echo "Added $relative_path to .gitignore"
+    if ! grep -Fxq "/$relative_path" .gitignore; then
+        echo "/$relative_path" >> .gitignore
         git add .gitignore
     fi
 
-    # Genera un nuovo nome per il file pesante
     base_name=$(basename "$file")
-    new_name="${base_name%.*}_B${branch_name}_$(date +%H%M).${base_name##*.}"
+    
+    # Genera il nome base per il file
+    new_name="${base_name%.*}_B${branch_name}.${base_name##*.}"
     new_path="$output_dir/$new_name"
+
+    # Aggiungi un numero progressivo se il nome esiste già
+    counter=1
+    while [[ -f "$new_path" ]]; do
+        new_name="${base_name%.*}_B${branch_name}_${counter}.${base_name##*.}"
+        new_path="$output_dir/$new_name"
+        counter=$((counter + 1))
+    done
+
+    # Sostituzione di realpath per il percorso completo
+    full_original_path=$(cd "$(dirname "$file")" && pwd)/$(basename "$file")
 
     # Sposta il file pesante nella sottocartella
     mv "$file" "$new_path"
 
-    # Gestione del file segnaposto .info
-    timestamp=$(date +%Y%m%d_%H%M%S)
+    # Creazione del file segnaposto
+    timestamp=$(date +%m%d_%H%M)
     placeholder_file="${file}_${timestamp}.info"
 
-
-    # Crea il file segnaposto
     size_human=$(du -h "$new_path" | cut -f1)
-    modified_date=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$new_path" 2>/dev/null || stat -c "%y" "$new_path")
-    full_path=$(realpath "$new_path")
+    modified_date=$(stat -c "%y" "$new_path" 2>/dev/null || stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$new_path")
+    full_path=$(cd "$(dirname "$new_path")" && pwd)/$(basename "$new_path")
     hostname=$(hostname)
 
     {
-        echo "Created on machine: $hostname"
-        echo "Original path: $relative_path"
-        echo "New path: $new_path"
-        echo "Size: $size_human"
+        echo -e "\nCreated on machine: $hostname"
+        echo -e "Original path: $full_original_path\n"
+        echo -e "New path: $full_path\n"
+        echo -e "Size: $size_human\n"
         echo "Last edit: $modified_date"
     } > "$placeholder_file"
 
-    echo "Bookmark created for $relative_path in $placeholder_file"
-
-    # Rimuovi il file pesante dall'indice di Git (non dal filesystem)
     git rm --cached "$relative_path" 2>/dev/null
-
-    # Aggiungi il file segnaposto all'indice di Git
     git add "$placeholder_file"
 done
+

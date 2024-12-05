@@ -36,7 +36,7 @@ for file in $large_files; do
 
     # Genera un nuovo nome per il file pesante
     base_name=$(basename "$file")
-    new_name="${base_name%.*}_${branch_name}.${base_name##*.}"
+    new_name="${base_name%.*}_B${branch_name}_$(date +%H%M).${base_name##*.}"
     new_path="$output_dir/$new_name"
 
     # Sposta il file pesante nella sottocartella
@@ -45,7 +45,7 @@ for file in $large_files; do
     # Gestione del file segnaposto .info
     timestamp=$(date +%Y%m%d_%H%M%S)
     placeholder_file="${file}_${timestamp}.info"
-    
+
 
     # Crea il file segnaposto
     size_human=$(du -h "$new_path" | cut -f1)

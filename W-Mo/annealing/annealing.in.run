@@ -1,5 +1,8 @@
 # Thermo output
 	compute msd all msd
+	compute myRDF all rdf 50	
+
+	fix 1 all ave/time 500 1 500 c_myRDF[*] file RDF.txt mode vector
 
 	thermo          1000
 	thermo_style    custom step temp press pe ke etotal vol density c_msd[1] c_msd[2] c_msd[3]
@@ -50,7 +53,7 @@
 
 
 # ----- HOLD AT Tfinal -----
-	fix             ffinal all npt temp ${Tfinal} ${Tfinal} ${tdamp} iso ${press} ${press} ${pdamp}
+	fix             ffinal all npt temp ${Tfinal} ${Tfinal} ${tdamp} aniso ${press} ${press} ${pdamp}
 	run             1000000   # 1 ns
 	unfix           ffinal
 

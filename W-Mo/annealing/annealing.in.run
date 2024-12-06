@@ -5,29 +5,29 @@
 	fix 1 all ave/time 500 1 500 c_myRDF[*] file RDF.txt mode vector
 
 	thermo          1000
-	thermo_style    custom step temp press pe ke etotal vol density c_msd[1] c_msd[2] c_msd[3]
+	thermo_style    custom step temp press pe ke etotal vol density enthalpy c_msd[1] c_msd[2] c_msd[3]
 	thermo_modify   flush yes
 
 # Dump configuration
-	dump            d1 all custom 50000 annealed_system.dump id type x y z xu yu zu vx vy vz
+	dump            d1 all custom 50000 annealed_W-Mo.dump id type element x y z xu yu zu vx vy vz
 	dump_modify     d1 element W Mo
 
 
 # ----- INITIAL EQUILIBRATION AT Ti -----
 	velocity        all create ${Ti} 872392 dist gaussian
-	fix             feq all npt temp ${Ti} ${Ti} ${tdamp} iso ${press} ${press} ${pdamp}
+	fix             feq all npt temp ${Ti} ${Ti} ${tdamp} aniso ${press} ${press} ${pdamp}
 	run             200000    # 200 ps
 	unfix           feq
 
 
 # ----- HEATING FROM Ti TO Thigh -----
-	fix             fheat all npt temp ${Ti} ${Thigh} ${tdamp} iso ${press} ${press} ${pdamp}
+	fix             fheat all npt temp ${Ti} ${Thigh} ${tdamp} aniso ${press} ${press} ${pdamp}
 	run             1000000   # 1 ns
 	unfix           fheat
 
 
 # ----- HOLD AT Thigh -----
-	fix             fholdhigh all npt temp ${Thigh} ${Thigh} ${tdamp} iso ${press} ${press} ${pdamp}
+	fix             fholdhigh all npt temp ${Thigh} ${Thigh} ${tdamp} aniso ${press} ${press} ${pdamp}
 	run             1000000   # 1 ns
 	unfix           fholdhigh
 
@@ -44,7 +44,7 @@
 
 	  print "Cooling step ${i}: ${Tstart} K to ${Tend} K"
 
-	  fix  fcool all npt temp ${Tstart} ${Tend} ${tdamp} iso ${press} ${press} ${pdamp}
+	  fix  fcool all npt temp ${Tstart} ${Tend} ${tdamp} aniso ${press} ${press} ${pdamp}
 	  run  1000000    # 1 ns per cooling segment
 	  unfix fcool
 

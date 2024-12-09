@@ -22,7 +22,7 @@
 
 # ----- HEATING FROM Ti TO Thigh -----
 	fix             fheat all npt temp ${Ti} ${Thigh} ${tdamp} aniso ${press} ${press} ${pdamp}
-	run             1000000   # 1 ns
+	run             2000000   # 2 ns
 	unfix           fheat
 
 

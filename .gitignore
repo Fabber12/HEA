@@ -2,5 +2,5 @@
 large_files/annealed_W-Mo_Bannealing_1359.dump
 *.swp
 large_files/
-/W-Mo/annealing/annealed_system.dump
+/W-Mo/annealing/RDF.txt
 /W-Mo/annealing/annealed_W-Mo.dump

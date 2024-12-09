@@ -48,13 +48,8 @@ for file in $large_files; do
     # Rimuovi il prefisso "./" dal percorso
     relative_path=${file#./}
 
-    if ! grep -Fxq "/$relative_path" .gitignore; then
-        echo "/$relative_path" >> .gitignore
-        git add .gitignore
-    fi
-
     base_name=$(basename "$file")
-    
+
     # Genera il nome base per il file
     new_name="${base_name%.*}_B${branch_name}.${base_name##*.}"
     new_path="$output_dir/$new_name"
@@ -83,8 +78,8 @@ for file in $large_files; do
     hostname=$(hostname)
 
     {
-        echo -e "\nCreated on machine: $hostname"
-        echo -e "Original path: $full_original_path\n"
+        echo "Created on machine: $hostname"
+        echo -e "\nOriginal path: $full_original_path\n"
         echo -e "New path: $full_path\n"
         echo -e "Size: $size_human\n"
         echo "Last edit: $modified_date"
@@ -93,4 +88,3 @@ for file in $large_files; do
     git rm --cached "$relative_path" 2>/dev/null
     git add "$placeholder_file"
 done
-

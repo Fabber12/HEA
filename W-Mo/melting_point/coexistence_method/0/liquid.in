@@ -1,0 +1,19 @@
+# ----------------- Init Section -----------------
+
+include "liquid.in.init"
+
+
+# ----------------- Atom Definition Section -----------------
+
+read_data "en_min_W-Mo.data"
+
+# ----------------- Settings Section -----------------
+
+include "liquid.in.settings"
+
+# ----------------- Run Section -----------------
+
+include "liquid.in.run"
+
+
+

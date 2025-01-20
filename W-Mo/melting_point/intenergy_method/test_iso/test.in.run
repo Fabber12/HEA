@@ -1,0 +1,30 @@
+# Thermo output
+	compute msd all msd
+	compute pot_eng_atom all pe/atom
+	compute pot_eng all reduce sum c_pot_eng_atom
+	compute kin_eng all ke
+
+	thermo          500
+	thermo_style    custom step temp press pe ke etotal vol density enthalpy c_pot_eng c_kin_eng c_msd[1] c_msd[2] c_msd[3]
+	thermo_modify   flush yes
+
+	dump            d1 all custom 50000 test_W-Mo.dump id type element x y z xu yu zu vx vy vz
+	dump_modify     d1 element W Mo
+
+
+# ----- HEATING FROM Ti TO Thigh -----
+
+	fix             fheat_iso all npt temp ${Ti} ${Thigh} ${tdamp} iso ${press} ${press} ${pdamp}
+	run             2000000   # 2 ns
+	unfix           fheat_iso
+
+
+
+# ----- HOLD AT Thigh -----
+	fix             fholdhigh all npt temp ${Thigh} ${Thigh} ${tdamp} iso ${press} ${press} ${pdamp}
+	run             1000000   # 1 ns
+	unfix           fholdhigh
+
+
+# ----- FINAL OUTPUT -----
+	write_data      W-Mo_6000K.data

@@ -1,0 +1,1 @@
+Only potential energy printed here, but internal energy = pe + ke

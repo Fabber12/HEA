@@ -1,0 +1,21 @@
+# ----------------- Init Section -----------------
+
+include "coexistence.in.init"
+
+
+# ----------------- Atom Definition Section -----------------
+
+read_data "solid.data" 
+
+read_data "liquid.data" add append shift 37 0 0
+
+# ----------------- Settings Section -----------------
+
+include "coexistence.in.settings"
+
+# ----------------- Run Section -----------------
+
+include "coexistence.in.run"
+
+
+

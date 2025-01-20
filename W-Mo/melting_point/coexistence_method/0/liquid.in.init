@@ -1,0 +1,41 @@
+# ----- VARIABLES -----
+	variable Ti     equal 300     # Initial temperature (K)
+	variable Thigh  equal 6000    # High temperature for annealing (K)
+	variable Tfinal equal 300     # Final temperature after cooling (K)
+	variable Tstep  equal 500     # Cooling step (K) per stage (Thigh - Tstep - Tstep - ...)
+	variable delT   equal ${Thigh}-${Tfinal}
+	variable nsteps equal ceil(v_delT/v_Tstep) # Number of cooling steps
+
+
+# Fixed time parameters
+	variable tdamp  equal 0.1     # Thermostat damping (ps)
+	variable pdamp  equal 1.0     # Barostat damping (ps)
+
+
+# Pressure
+	variable press  equal 1.0
+
+
+# Output name files
+	variable run  string liquid_W-Mo
+
+
+
+
+# ----- DETAILS -----
+	echo            log
+	log             ${run}.log
+
+
+# Styles
+	units        metal
+	atom_style   atomic
+	pair_style   eam/fs
+
+# Neighbour list
+	neighbor        2.0 bin
+	neigh_modify    check yes
+
+
+# Boundary conditions
+	boundary p p p

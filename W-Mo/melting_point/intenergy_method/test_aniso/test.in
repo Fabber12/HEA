@@ -1,0 +1,19 @@
+# ----------------- Init Section -----------------
+
+include "test.in.init"
+
+
+# ----------------- Atom Definition Section -----------------
+
+read_data "W-Mo_2000K.data"
+
+# ----------------- Settings Section -----------------
+
+include "test.in.settings"
+
+# ----------------- Run Section -----------------
+
+include "test.in.run"
+
+
+

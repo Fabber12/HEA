@@ -1,0 +1,28 @@
+LAMMPS (2 Aug 2023)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+# ----------------- Init Section -----------------
+
+include "coexistence.in.init"
+# ----- VARIABLES -----
+	variable Ti     equal 3300     # Temperature (K)
+
+# Fixed time parameters
+	variable tdamp  equal 0.1     # Thermostat damping (ps)
+	variable pdamp  equal 1.0     # Barostat damping (ps)
+
+
+# Pressure
+	variable press  equal 1.0
+
+
+# Output name files
+	variable run  string coexistence_W-Mo
+
+
+
+
+# ----- DETAILS -----
+	echo            log
+	log             ${run}.log
+	log             coexistence_W-Mo.log

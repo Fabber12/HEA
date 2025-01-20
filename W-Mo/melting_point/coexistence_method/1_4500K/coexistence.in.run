@@ -1,0 +1,23 @@
+# Thermo output
+	compute msd all msd
+
+	thermo          1000
+	thermo_style    custom step temp press pe ke etotal vol density enthalpy c_msd[1] c_msd[2] c_msd[3]
+	thermo_modify   flush yes
+
+# Dump configuration
+	dump            d1 all custom 25000 coexistence_W-Mo.dump id type element x y z xu yu zu vx vy vz
+	dump_modify     d1 element W Mo
+
+
+# ----- EQUILIBRATION AT Ti -----
+	minimize 1e-25 1e-25 5000 10000
+
+	fix             feq all npt temp ${Ti} ${Ti} ${tdamp} aniso ${press} ${press} ${pdamp}
+	run             1000000    # 1 ns
+	unfix           feq
+
+write_data	liq_or_sol.data nocoeff
+
+
+

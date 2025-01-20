@@ -1,0 +1,37 @@
+# Thermo output
+	compute msd all msd
+	compute myRDF all rdf 50	
+
+	fix 1 all ave/time 500 1 500 c_myRDF[*] file RDF.txt mode vector
+
+	thermo          1000
+	thermo_style    custom step temp press pe ke etotal vol density enthalpy c_msd[1] c_msd[2] c_msd[3]
+	thermo_modify   flush yes
+
+# Dump configuration
+	dump            d1 all custom 50000 annealed_W-Mo.dump id type element x y z xu yu zu vx vy vz
+	dump_modify     d1 element W Mo
+
+
+# ----- INITIAL EQUILIBRATION AT Ti -----
+	velocity        all create ${Ti} 872392 dist gaussian
+	fix             feq all npt temp ${Ti} ${Ti} ${tdamp} aniso ${press} ${press} ${pdamp}
+	run             200000    # 200 ps
+	unfix           feq
+
+write_data	solid.data nocoeff
+
+# ----- HEATING FROM Ti TO Thigh -----
+	fix             fheat all nvt temp ${Ti} ${Thigh} ${tdamp} 
+	run             2000000   # 2 ns
+	unfix           fheat
+
+
+# ----- HOLD AT Thigh -----
+	fix             fholdhigh all nvt temp ${Thigh} ${Thigh} ${tdamp}
+	run             1000000   # 1 ns
+	unfix           fholdhigh
+
+write_data	liquid.data nocoeff
+
+

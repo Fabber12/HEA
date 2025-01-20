@@ -1,0 +1,110 @@
+
+
+# Styles
+	units        metal
+	atom_style   atomic
+	pair_style   eam/fs
+
+# Neighbour list
+	neighbor        2.0 bin
+	neigh_modify    check yes
+
+
+# Boundary conditions
+	boundary p p p
+
+
+# ----------------- Atom Definition Section -----------------
+
+read_data "solid.data"
+Reading data file ...
+  orthogonal box = (-0.016319894 -0.026116788 -0.077393605) to (31.66632 31.676117 79.202394)
+  2 by 2 by 10 MPI processor grid
+  reading atom labelmap ...
+  reading atoms ...
+  5000 atoms
+  reading velocities ...
+  5000 velocities
+  read_data CPU = 0.042 seconds
+
+read_data "liquid.data" add append shift 32 0 0
+Reading data file ...
+WARNING: Non-zero image flags with growing box leads to bad coordinates (src/read_data.cpp:589)
+  orthogonal box = (-0.016319894 -0.026116788 -0.077393605) to (63.66632 31.676117 79.202394)
+  4 by 2 by 5 MPI processor grid
+  reading atom labelmap ...
+  reading atoms ...
+  5000 atoms
+  reading velocities ...
+  5000 velocities
+  read_data CPU = 0.027 seconds
+
+# ----------------- Settings Section -----------------
+
+include "coexistence.in.settings"
+# ----- SETTINGS -----
+# Forcefield
+	pair_coeff * * W-Mo.eam.fs W Mo
+
+# Collection of atoms
+	group alloy type  1 2
+10000 atoms in group alloy
+
+
+# ----------------- Run Section -----------------
+
+include "coexistence.in.run"
+# Thermo output
+	compute msd all msd
+	compute myRDF all rdf 50
+
+	fix 1 all ave/time 500 1 500 c_myRDF[*] file RDF.txt mode vector
+
+	thermo          1000
+	thermo_style    custom step temp press pe ke etotal vol density enthalpy c_msd[1] c_msd[2] c_msd[3]
+	thermo_modify   flush yes
+
+# Dump configuration
+	dump            d1 all custom 50000 annealed_W-Mo.dump id type element x y z xu yu zu vx vy vz
+	dump_modify     d1 element W Mo
+
+
+# ----- INITIAL EQUILIBRATION AT Ti -----
+	velocity        all create ${Ti} 872392 dist gaussian
+	velocity        all create 300 872392 dist gaussian
+	fix             feq all npt temp ${Ti} ${Ti} ${tdamp} aniso ${press} ${press} ${pdamp}
+	fix             feq all npt temp 300 ${Ti} ${tdamp} aniso ${press} ${press} ${pdamp}
+	fix             feq all npt temp 300 300 ${tdamp} aniso ${press} ${press} ${pdamp}
+	fix             feq all npt temp 300 300 0.1 aniso ${press} ${press} ${pdamp}
+	fix             feq all npt temp 300 300 0.1 aniso 1 ${press} ${pdamp}
+	fix             feq all npt temp 300 300 0.1 aniso 1 1 ${pdamp}
+	fix             feq all npt temp 300 300 0.1 aniso 1 1 1
+	run             200000    # 200 ps
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 7.3
+  ghost atom cutoff = 7.3
+  binsize = 3.65, bins = 18 9 22
+  2 neighbor lists, perpetual/occasional/extra = 1 1 0
+  (1) pair eam/fs, perpetual
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d
+      bin: standard
+  (2) compute rdf, occasional, copy from (1)
+      attributes: half, newton on
+      pair build: copy
+      stencil: none
+      bin: none
+Per MPI rank memory allocation (min/avg/max) = 4.121 | 4.122 | 4.123 Mbytes
+   Step          Temp          Press          PotEng         KinEng         TotEng         Volume        Density        Enthalpy       c_msd[1]       c_msd[2]       c_msd[3]   
+         0   300            949859.23     -1314.9453      387.74166     -927.20368      160056.53      14.520987      93963.198      0              0              0            
+      1000   1.3924384     -96.726693     -74599.743      1.7996879     -74597.944      166589.77      13.951509     -74608.001      1.9753242      0.13526732     0.13014456   
+      2000   1.0581887     -30.785284     -75242.701      1.3676794     -75241.334      165814.58      14.016733     -75244.52       1.8092008      0.12540629     0.12056107   
+      3000   2.2908763     -16.945634     -75664.609      2.9608939     -75661.648      165254.01      14.06428      -75663.396      1.7935959      0.13064381     0.11726133   
+      4000   542.62468      476.27305     -75777.288      701.32731     -75075.961      165792.31      14.018616     -75026.676      4.0596211      0.19641253     0.20415894   
+      5000   326.66009     -203.06869     -76276.01       422.19909     -75853.811      164811.94      14.102005     -75874.7        3.2113538      0.25392854     0.26062424   
+      6000   259.23556      148.83609     -76490.757      335.05475     -76155.702      164553.9       14.124118     -76140.416      3.5735561      0.28990531     0.29357798   
+      7000   330.68952     -85.109475     -76490.7        427.407       -76063.293      164775.52      14.105122     -76072.046      3.8462909      0.31131697     0.30706988   
+      8000   278.30691     -275.98044     -76620.477      359.70394     -76260.773      164522.37      14.126825     -76289.112      3.5134471      0.33541936     0.33411622   

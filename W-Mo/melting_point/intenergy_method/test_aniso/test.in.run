@@ -1,0 +1,44 @@
+# Thermo output
+	compute msd all msd	
+
+	#thermo          1000
+	#thermo_style    custom step temp press pe ke etotal vol density enthalpy c_msd[1] c_msd[2] c_msd[3]
+	#thermo_modify   flush yes
+
+# Dump configuration
+	#dump            d1 all custom 50000 test_W-Mo.dump id type element x y z xu yu zu vx vy vz
+	#dump_modify     d1 element W Mo
+
+
+# ----- HEATING FROM 300K TO Ti -----
+	#fix             fheat_0 all npt temp 300 ${Ti} ${tdamp} aniso ${press} ${press} ${pdamp}
+	#run             500000   # 0.5 ns
+	#unfix           fheat_0
+
+#write_data W-Mo_2000K.data nocoeff
+
+
+# ----- HEATING FROM Ti TO Thigh -----
+	compute in_ene_atom all pe/atom
+	compute in_ene all reduce sum c_in_ene_atom
+
+	thermo          500
+	thermo_style    custom step temp press pe ke etotal vol density enthalpy c_in_ene c_msd[1] c_msd[2] c_msd[3]
+	thermo_modify   flush yes
+
+	dump            d1 all custom 50000 test_W-Mo.dump id type element x y z xu yu zu vx vy vz
+	dump_modify     d1 element W Mo
+
+	fix             fheat all npt temp ${Ti} ${Thigh} ${tdamp} aniso ${press} ${press} ${pdamp}
+	run             2000000   # 2 ns
+	unfix           fheat
+
+
+# ----- HOLD AT Thigh -----
+	fix             fholdhigh all npt temp ${Thigh} ${Thigh} ${tdamp} aniso ${press} ${press} ${pdamp}
+	run             1000000   # 1 ns
+	unfix           fholdhigh
+
+
+# ----- FINAL OUTPUT -----
+	write_data      W-Mo_5000K.data

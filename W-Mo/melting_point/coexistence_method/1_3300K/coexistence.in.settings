@@ -1,0 +1,7 @@
+# ----- SETTINGS -----
+# Forcefield
+	pair_coeff * * W-Mo.eam.fs W Mo
+
+# Collection of atoms
+	group alloy type  1 2
+	

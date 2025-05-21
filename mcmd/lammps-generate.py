@@ -184,7 +184,8 @@ run_tpl = f"""
 {mc_block}
     run {run_steps}
 
-    # Output saving
+
+# Output saving
     write_data ${{out2}}
     write_restart step{run_steps}_{sysname}.restart
 """

@@ -192,7 +192,7 @@ run_tpl = f"""
 # Write all files
 def write_file(name, content):
     with open(name, 'w') as f:
-        f.write(content)
+        f.write(content.lstrip('\n'))
     print(f"Wrote {name}")
 
 write_file(f"{template_base}.in", driver_tpl)

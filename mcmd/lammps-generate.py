@@ -149,7 +149,7 @@ mc_swaps = []
 for i in range(1, n+1):
     for j in range(i+1, n+1):
         mc_swaps.append(
-            f"    fix swap{i}{j} all atom/swap {mc_N} {mc_X} 12345 {temp} ke no types {i} {j}"
+            f"    fix swap{i}{j} all atom/swap {mc_N} {mc_X} 12345 ${{temp}} ke no types {i} {j}"
         )
 mc_block = "\n".join(mc_swaps)
 

@@ -53,7 +53,6 @@ ffpath     = "/data1/projects/StoRIES/MOL-E/potentials/eam/W-Mo.eam.fs"
 
 # Derived names and helpers
 n = len(elements)
-sysname = "".join(elements)
 template_base = "mcmd_" + sysname
 seed = random.randint(100000, 999999)
 elem_list = ' '.join(elements)

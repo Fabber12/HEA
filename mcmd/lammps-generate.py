@@ -14,7 +14,7 @@ Customize the CONFIGURATION block to adjust elements, fractions, lattice,
 replicates, file names, force-field, MD/MC parameters, etc.
 
 ATTENTION:
-To run this script on ENI CLUSTER you should firstly lunch "module load tools/python/3.9.1"
+To run this script on ENI CLUSTER you should firstly launch "module load tools/python/3.9.1"
 """
 import os
 import random
